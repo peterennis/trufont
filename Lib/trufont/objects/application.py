@@ -191,6 +191,9 @@ class Application(QApplication):
         viewMenu = menuBar.fetchMenu(Entries.View)
         self.updateDrawingAttributes(viewMenu)
 
+        coordinatesSubmenu = viewMenu.fetchMenu(Entries.View_Show_Coordinates)
+        self.updateDrawingAttributes(coordinatesSubmenu)
+
         scriptsMenu = menuBar.fetchMenu(Entries.Scripts)
         self.updateExtensions(scriptsMenu)
 
@@ -412,13 +415,11 @@ class Application(QApplication):
                     ]
                 )
                 supportedFiles += "*.otf *.pfa *.pfb *.ttf *.ttx *.woff"
+            all_supported_types_filter = self.tr("All supported files {}").format(
+                "({})".format(supportedFiles.rstrip())
+            )
             fileFormats.extend(
-                [
-                    self.tr("All supported files {}").format(
-                        "(%s)" % supportedFiles.rstrip()
-                    ),
-                    self.tr("All files {}").format("(*.*)"),
-                ]
+                [all_supported_types_filter, self.tr("All files {}").format("(*.*)")]
             )
             # dialog
             importKey = importFile and not openFile
@@ -442,7 +443,7 @@ class Application(QApplication):
                 dialog.restoreState(state)
             dialog.setAcceptMode(QFileDialog.AcceptOpen)
             dialog.setFileMode(QFileDialog.ExistingFile)
-            dialog.setNameFilter(fileFormats[-2])
+            dialog.selectNameFilter(all_supported_types_filter)
             ret = dialog.exec_()
             # save current directory
             # TODO: should open w/o file chooser also update current dir?
@@ -672,6 +673,22 @@ class Application(QApplication):
             (
                 Entries.View_Show_Points,
                 ("showGlyphOnCurvePoints", "showGlyphOffCurvePoints"),
+                True,
+            ),
+            (
+                Entries.View_Show_Coordinates_When_Selected,
+                ("showGlyphCoordinatesWhenSelected",),
+                False,
+            ),
+            (
+                Entries.View_Show_Point_Coordinates,
+                ("showGlyphPointCoordinates",),
+                False,
+            ),
+            (
+                Entries.View_Show_Bezier_Handles_Coordinates,
+                ("showGlyphBezierHandlesCoordinates",),
+                False,
             ),
             (
                 Entries.View_Show_Metrics,
@@ -680,16 +697,18 @@ class Application(QApplication):
                     "showFontVerticalMetrics",
                     "showFontPostscriptBlues",
                 ),
+                True,
             ),
-            (Entries.View_Show_Images, ("showGlyphImage",)),
+            (Entries.View_Show_Images, ("showGlyphImage",), True,),
             (
                 Entries.View_Show_Guidelines,
                 ("showGlyphGuidelines", "showFontGuidelines"),
+                True,
             ),
         ]
-        for entry, attrs in elements:
+        for entry, attrs, checked in elements:
             action = menu.fetchAction(entry)
             action.setCheckable(True)
-            action.setChecked(drawingAttributes.get(attrs[0], True))
+            action.setChecked(drawingAttributes.get(attrs[0], checked))
             action.setData(attrs)
             action.triggered.connect(self.setDrawingAttribute)

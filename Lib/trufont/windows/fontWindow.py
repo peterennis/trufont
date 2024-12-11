@@ -247,7 +247,7 @@ class FontWindow(BaseWindow):
         self._clipboardActions = (cut, copy, copyComponent, paste)
         editMenu.fetchAction(Entries.Edit_Select_All, self.selectAll)
         # editMenu.fetchAction(Entries.Edit_Deselect, self.deselect)
-        editMenu.fetchAction(Entries.Edit_Find, self.findGlyph)
+        self._findAction = editMenu.fetchAction(Entries.Edit_Find, self.findGlyph)
         editMenu.addSeparator()
         editMenu.fetchAction(Entries.Edit_Settings)
 
@@ -361,6 +361,8 @@ class FontWindow(BaseWindow):
         index = self.stackWidget.currentIndex()
         if index:
             self.tabWidget.removeTab(index)
+        else:
+            self.close()
 
     def maybeSaveBeforeExit(self):
         if self._font.dirty:
@@ -1063,8 +1065,10 @@ class FontWindow(BaseWindow):
         widget = self.stackWidget.currentWidget()
         if self.isGlyphTab():
             currentGlyph = widget.activeGlyph()
+            self._findAction.setEnabled(True)
         else:
             currentGlyph = widget.lastSelectedGlyph()
+            self._findAction.setEnabled(False)
         # disconnect eventual signal of previous glyph
         objects = ((self._undoAction, self.undo), (self._redoAction, self.redo))
         for action, slot in objects:
